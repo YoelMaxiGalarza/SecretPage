@@ -15,14 +15,15 @@ mongoose.connect("mongodb://localhost/auth_demo_app", {
 var app = express();
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(passport.initialize());
-app.use(passport.session());
+
 app.use(require("express-session")({
     secret: "Rusty is the best and cutest dog in the work",
     resave: false,
     saveUninitialized: false
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
