@@ -3,7 +3,7 @@ const express = require("express"),
     passport = require("passport"),
     bodyParser = require("body-parser"),
     LocalStrategy = require("passport-local"),
-    passportLocalMongoose = require("passport-local-mongoose");
+    passportLocalMongoose = require("passport-local-mongoose"),
     User = require("./models/user");
 
 mongoose.connect("mongodb://localhost/auth_demo_app", {
@@ -14,6 +14,7 @@ mongoose.connect("mongodb://localhost/auth_demo_app", {
 
 var app = express();
 app.set("view engine", "ejs");
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(require("express-session")({
@@ -21,10 +22,10 @@ app.use(require("express-session")({
     resave: false,
     saveUninitialized: false
 }));
-app.use(bodyParser.urlencoded({ extended: true }));
+
+passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
-passport.use(new LocalStrategy(User.authenticate()));
 
 //====================
 //ROUTES
@@ -33,7 +34,7 @@ app.get("/", (req, res) => {
     res.render("home");
 });
 
-app.get("/secret", (req, res) => {
+app.get("/secret", isLoggedIn, (req, res) => {
     res.render("secret");
 });
 //------------------
@@ -52,7 +53,7 @@ app.post("/register", (req, res) => {
             console.log(err);
             return res.render("register");
         }
-        passport.authenticate("local")(req, res,function(){
+        passport.authenticate("local")(req, res, function () {
             res.redirect("/secret");
         });
 
@@ -60,22 +61,29 @@ app.post("/register", (req, res) => {
 });
 //LOGIN ROUTES
 //Render Login Form
-app.get("/login", (req, res)=>{
+app.get("/login", (req, res) => {
     res.render("login");
 });
 //Login Logic
 //middleware
-app.post("/login", passport.authenticate("local",{
+app.post("/login", passport.authenticate("local", {
     successRedirect: "/secret",
-    failureRedirect: "/login" 
-}) ,(req, res)=>{
+    failureRedirect: "/login"
+}), (req, res) => {
 });
 //Log Out
-app.get("/logout", (req, res)=>{
-    res.send("OK I WILL LOG YOU OUT. not yet though...")
+app.get("/logout", (req, res) => {
+    req.logout();
+    res.redirect("/");
 });
+//Middleware that check if the user is logged
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect("/login");
+}
 
-
-app.listen(4000, () => {
+app.listen(3000, () => {
     console.log("Server on !!")
 });
