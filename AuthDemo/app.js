@@ -11,7 +11,6 @@ mongoose.connect("mongodb://localhost/auth_demo_app", {
     useUnifiedTopology: true
 });
 
-
 var app = express();
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -55,7 +54,7 @@ app.post("/register", (req, res) => {
             return res.render("register");
         }
         passport.authenticate("local")(req, res, function () {
-            res.redirect("/secret");
+            res.redirect("/login");
         });
 
     });
